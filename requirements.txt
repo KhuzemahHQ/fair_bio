@@ -1,0 +1,5 @@
+datasets==4.4.1
+evaluate==0.4.6
+numpy==2.3.5
+torch==2.8.0+cu126
+transformers==4.57.3
