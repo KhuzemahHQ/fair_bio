@@ -185,3 +185,4 @@ mlruns/
 logs/
 test_trainer/
 final_model/
+models/
