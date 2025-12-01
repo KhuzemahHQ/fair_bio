@@ -29,6 +29,19 @@ def test_demographic_parity():
         print(f"Error: Dataset not found at '{DATA_DIR}'. Please run baseline.py to download it first.")
         return
 
+    # Use the official label mapping provided by the dataset creators.
+    id2label = {
+        0: 'accountant', 1: 'architect', 2: 'attorney', 3: 'chiropractor',
+        4: 'comedian', 5: 'composer', 6: 'dentist', 7: 'dietitian',
+        8: 'dj', 9: 'filmmaker', 10: 'interior_designer', 11: 'journalist',
+        12: 'model', 13: 'nurse', 14: 'painter', 15: 'paralegal',
+        16: 'pastor', 17: 'personal_trainer', 18: 'photographer',
+        19: 'physician', 20: 'poet', 21: 'professor', 22: 'psychologist',
+        23: 'rapper', 24: 'software_engineer', 25: 'surgeon',
+        26: 'teacher', 27: 'yoga_teacher'
+    }
+    
+    
     # 4. Generate or Load Predictions
     if os.path.exists(PREDICTIONS_FILE):
         print(f"Loading existing predictions from '{PREDICTIONS_FILE}'...")
@@ -66,25 +79,28 @@ def test_demographic_parity():
     # 5. Calculate Demographic Parity
     print("\n--- Overall Demographic Parity Evaluation ---")
 
+    df['predicted_label'] = df['predicted_id'].map(id2label)
+
+
     # Separate by gender ID. In this dataset: 0 = female, 1 = male.
     males = df[df['gender_id'] == 1]
     females = df[df['gender_id'] == 0]
 
     # Calculate the distribution of predicted professions for each gender
-    male_dist = males['predicted_id'].value_counts(normalize=True).sort_index()
-    female_dist = females['predicted_id'].value_counts(normalize=True).sort_index()
+    male_dist = males['predicted_label'].value_counts(normalize=True)
+    female_dist = females['predicted_label'].value_counts(normalize=True)
 
     # Combine into a single DataFrame for plotting
     dist_df = pd.DataFrame({'Male': male_dist, 'Female': female_dist}).fillna(0)
     dist_df['Difference'] = abs(dist_df['Male'] - dist_df['Female'])
     dist_df = dist_df.sort_values(by='Difference', ascending=False)
 
-    print("Top 10 profession IDs with the largest demographic parity difference:")
+    print("Top 10 professions with the largest demographic parity difference:")
     print(dist_df.head(10))
 
     # 6. Visualize the distributions
     print("\nGenerating plot of prediction distributions by gender...")
-    plot_df = dist_df.drop(columns=['Difference']).sort_index() # Sort by profession ID for the plot
+    plot_df = dist_df.drop(columns=['Difference']).sort_index() # Sort alphabetically for the plot
     plot_df.plot(kind='bar', figsize=(18, 8), width=0.8)
 
     plt.title('Distribution of Predicted Professions by Gender')
