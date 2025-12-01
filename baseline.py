@@ -6,7 +6,14 @@ from transformers import (
     TrainingArguments,
     Trainer,
 )
+import torch
 import evaluate
+
+# Check for CUDA availability and set the device
+device = "cuda" if torch.cuda.is_available() else "cpu"
+print(f"--- Using device: {device} ---")
+if device == "cpu":
+    print("WARNING: CUDA not available, training will be very slow. Ensure you have a GPU and PyTorch with CUDA support installed.")
 
 # 1. Load Data
 print("Loading dataset from local disk...")
