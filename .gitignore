@@ -184,5 +184,6 @@ data/
 mlruns/
 logs/
 test_trainer/
+test_trainer_synthetic/
 final_model/
 models/
