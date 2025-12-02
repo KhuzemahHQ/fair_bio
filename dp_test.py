@@ -12,9 +12,11 @@ def test_demographic_parity():
     Loads a fine-tuned model and evaluates its demographic parity on the test set
     with respect to gender.
     """
-    MODEL_ID = "pellement99/distilbert-occupation-classifier"
+
+    # Select Model : pellement99/distilbert-occupation-classifier, pellement99/occupation-classification-synthetic, or pellement99/occupation-classification-very-synthetic
+    MODEL_ID = "pellement99/occupation-classification-very-synthetic" 
     DATA_DIR = "./data"
-    PREDICTIONS_FILE = "predictions.csv"
+    PREDICTIONS_FILE = "very_predictions.csv"
 
     # 1. Setup device
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -109,7 +111,7 @@ def test_demographic_parity():
     plt.xticks(rotation=90)
     plt.tight_layout()
     plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.show()
+    plt.savefig("results/very_synthetic_parity_320pm.png")
 
 if __name__ == "__main__":
     test_demographic_parity()

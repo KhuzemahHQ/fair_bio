@@ -59,7 +59,7 @@ pip install --upgrade numpy transformers datasets torch evaluate scikit-learn ac
 # Train SAE for the collected hookpoint
 echo "Training."
 cd CSC2615Proj/fair_bio
-python baseline.py
+python baseline_very_synthetic.py
 
 ls -lr "$SCRATCH_PATH/CSC2615Proj"
 
