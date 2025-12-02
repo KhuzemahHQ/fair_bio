@@ -14,9 +14,9 @@ def test_demographic_parity():
     """
 
     # Select Model : pellement99/distilbert-occupation-classifier, pellement99/occupation-classification-synthetic, or pellement99/occupation-classification-very-synthetic
-    MODEL_ID = "pellement99/occupation-classification-very-synthetic" 
+    MODEL_ID = "pellement99/distilbert-occupation-classifier" 
     DATA_DIR = "./data"
-    PREDICTIONS_FILE = "very_predictions.csv"
+    PREDICTIONS_FILE = "predictions.csv"
 
     # 1. Setup device
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -84,9 +84,9 @@ def test_demographic_parity():
     df['predicted_label'] = df['predicted_id'].map(id2label)
 
 
-    # Separate by gender ID. In this dataset: 0 = female, 1 = male.
-    males = df[df['gender_id'] == 1]
-    females = df[df['gender_id'] == 0]
+    # Separate by gender ID. In this dataset: 0 = male, 1 = female.
+    males = df[df['gender_id'] == 0]
+    females = df[df['gender_id'] == 1]
 
     # Calculate the distribution of predicted professions for each gender
     male_dist = males['predicted_label'].value_counts(normalize=True)
@@ -106,12 +106,13 @@ def test_demographic_parity():
     plot_df.plot(kind='bar', figsize=(18, 8), width=0.8)
 
     plt.title('Distribution of Predicted Professions by Gender')
+    plt.ylim(0,0.35)
     plt.ylabel('Proportion of Predictions')
     plt.xlabel('Profession ID')
     plt.xticks(rotation=90)
     plt.tight_layout()
     plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.savefig("results/very_synthetic_parity_320pm.png")
+    plt.savefig("results/baseline_parity.png")
 
 if __name__ == "__main__":
     test_demographic_parity()
