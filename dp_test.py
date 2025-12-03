@@ -13,10 +13,16 @@ def test_demographic_parity():
     with respect to gender.
     """
 
-    # Select Model : pellement99/distilbert-occupation-classifier, pellement99/occupation-classification-synthetic, or pellement99/occupation-classification-very-synthetic
-    MODEL_ID = "pellement99/distilbert-occupation-classifier" 
+    # Select Model : 
+    # pellement99/distilbert-occupation-classifier, 
+    # pellement99/occupation-classification-synthetic
+    # pellement99/occupation-classification-very-synthetic
+    MODEL_ID = "pellement99/occupation-classification-very-synthetic" 
     DATA_DIR = "./data"
-    PREDICTIONS_FILE = "predictions.csv"
+    # PREDICTIONS_FILE = "predictions.csv"
+    # PREDICTIONS_FILE = "hybrid_predictions.csv"
+    PREDICTIONS_FILE = "very_predictions.csv"
+
 
     # 1. Setup device
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -100,6 +106,12 @@ def test_demographic_parity():
     print("Top 10 professions with the largest demographic parity difference:")
     print(dist_df.head(10))
 
+    # Calculate and print the overall fairness score
+    mean_abs_diff = dist_df['Difference'].mean()
+    print("\n---")
+    print(f"Overall Fairness Score (Mean Absolute Difference): {mean_abs_diff:.6f}")
+    print("(A lower score indicates better fairness/less demographic parity disparity)")
+
     # 6. Visualize the distributions
     print("\nGenerating plot of prediction distributions by gender...")
     plot_df = dist_df.drop(columns=['Difference']).sort_index() # Sort alphabetically for the plot
@@ -112,7 +124,7 @@ def test_demographic_parity():
     plt.xticks(rotation=90)
     plt.tight_layout()
     plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.savefig("results/baseline_parity.png")
+    # plt.savefig("results/baseline_parity.png")
 
 if __name__ == "__main__":
     test_demographic_parity()
