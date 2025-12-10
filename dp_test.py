@@ -1,6 +1,6 @@
 import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
-from datasets import load_from_disk
+from datasets import load_from_disk, Dataset, DatasetDict
 from tqdm import tqdm
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -17,11 +17,14 @@ def test_demographic_parity():
     # pellement99/distilbert-occupation-classifier, 
     # pellement99/occupation-classification-synthetic
     # pellement99/occupation-classification-very-synthetic
-    MODEL_ID = "pellement99/occupation-classification-very-synthetic" 
+    # pellement99/occupation-classification-balanced-synthetic
+    MODEL_ID = "pellement99/occupation-classification-balanced-synthetic" 
     DATA_DIR = "./data"
     # PREDICTIONS_FILE = "predictions.csv"
     # PREDICTIONS_FILE = "hybrid_predictions.csv"
-    PREDICTIONS_FILE = "very_predictions.csv"
+    # PREDICTIONS_FILE = "very_predictions.csv"
+    PREDICTIONS_FILE = "balanced_predictions.csv"
+
 
 
     # 1. Setup device
@@ -31,8 +34,16 @@ def test_demographic_parity():
     # 3. Load Data
     print(f"Loading test data from '{DATA_DIR}'...")
     try:
-        dataset_dict = load_from_disk(DATA_DIR)
-        test_ds = dataset_dict['test']
+        train_ds = Dataset.load_from_disk("./data/train")
+        test_ds  = Dataset.load_from_disk("./data/test")
+        dev_ds   = Dataset.load_from_disk("./data/dev")  # or "validation" if that’s what you want
+
+        original_dataset_dict = DatasetDict({
+            "train": train_ds,
+            "test": test_ds,
+            "dev": dev_ds,
+        })
+        test_ds = original_dataset_dict['test']
     except FileNotFoundError:
         print(f"Error: Dataset not found at '{DATA_DIR}'. Please run baseline.py to download it first.")
         return
@@ -125,7 +136,7 @@ def test_demographic_parity():
     plt.ylim(0, 0.35)
     plt.tight_layout()
     plt.grid(axis='y', linestyle='--', alpha=0.7)
-    # plt.savefig("results/baseline_parity.png")
+    plt.savefig("results/baseline_parity_balanced.png")
 
 if __name__ == "__main__":
     test_demographic_parity()

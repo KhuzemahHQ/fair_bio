@@ -3,9 +3,9 @@
 #SBATCH --output=logs/train_2615_%j.log
 #SBATCH --error=logs/train_2615_%j.err
 #SBATCH --time=48:00:00
-#SBATCH --gres=gpu:rtx_a6000:1
+#SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=24
-#SBATCH --mem=120G
+#SBATCH --mem=30G
 #SBATCH --partition=gpunodes
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=pellement@cs.toronto.edu
@@ -59,6 +59,7 @@ pip install --upgrade numpy transformers datasets torch evaluate scikit-learn ac
 # Train SAE for the collected hookpoint
 echo "Training."
 cd CSC2615Proj/fair_bio
+echo "$PWD"
 python baseline_very_synthetic.py
 
 ls -lr "$SCRATCH_PATH/CSC2615Proj"

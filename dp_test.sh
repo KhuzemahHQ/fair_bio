@@ -4,7 +4,7 @@
 #SBATCH --error=logs/dp_test_%j.err
 #SBATCH --time=24:00:00
 #SBATCH --partition=gpunodes
-#SBATCH --gres=gpu:rtx_a6000:1         
+#SBATCH --gres=gpu:1         
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32G
 #SBATCH --mail-type=END,FAIL

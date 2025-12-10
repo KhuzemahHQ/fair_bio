@@ -1,5 +1,5 @@
 import numpy as np
-from datasets import load_from_disk, concatenate_datasets, Dataset
+from datasets import load_from_disk, concatenate_datasets, Dataset, DatasetDict
 from transformers import (
     AutoTokenizer,
     AutoModelForSequenceClassification,
@@ -9,6 +9,8 @@ from transformers import (
 import torch
 import evaluate
 import re
+import csv
+from datasets import Dataset
 
 # Check for CUDA availability and set the device
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -64,17 +66,74 @@ def load_synthetic_csv_manually(file_path):
         'gender': genders
     })
 
+
+
+def load_synthetic_csv(file_path):
+    """
+    Loads a synthetic CSV using Python's csv module, which correctly handles
+    quoted fields (commas inside quotes, etc.).
+    Assumes columns: hard_text, profession, gender
+    and that gender in the file is 0=male, 1=female but we want 0=female, 1=male.
+    """
+    hard_texts = []
+    professions = []
+    genders = []
+
+    with open(file_path, 'r', encoding='utf-8', newline='') as f:
+        reader = csv.reader(f, delimiter=',', quotechar='"', skipinitialspace=True)
+        # Skip header
+        header = next(reader, None)
+
+        for i, row in enumerate(reader, start=2):  # line numbers including header
+            # Expect exactly 3 columns: [text, profession, gender]
+            if len(row) < 3:
+                print(f"Warning: Line {i} has too few columns: {row}")
+                continue
+            try:
+                hard_text = row[0]
+                profession_id = int(row[1])
+                gender_synthetic_raw = int(row[2])
+
+                # Flip 0=male,1=female to 0=female,1=male
+                aligned_gender = 1 - gender_synthetic_raw
+
+                hard_texts.append(hard_text)
+                professions.append(profession_id)
+                genders.append(aligned_gender)
+            except ValueError as e:
+                print(f"Warning: Could not parse line {i}: {row}. Error: {e}")
+                continue
+
+    return Dataset.from_dict({
+        'hard_text': hard_texts,
+        'profession': professions,
+        'gender': genders,
+    })
+
+
 # 1. Load and Process Data
 print("Loading original dataset from local disk...")
-original_dataset_dict = load_from_disk("./data")
+train_ds = Dataset.load_from_disk("./data/train")
+test_ds  = Dataset.load_from_disk("./data/test")
+dev_ds   = Dataset.load_from_disk("./data/dev")  # or "validation" if that’s what you want
 
+original_dataset_dict = DatasetDict({
+    "train": train_ds,
+    "test": test_ds,
+    "dev": dev_ds,
+})
 train_ds_original = original_dataset_dict['train']
 eval_ds = original_dataset_dict['test'] # Using the official test split for evaluation
 
 # Load and manually parse the synthetic CSV data
-SYNTHETIC_CSV_PATH = "synthetic_data/synthetic_bios_professions_gender_30000.csv"
-print(f"Manually parsing synthetic dataset from '{SYNTHETIC_CSV_PATH}'...")
-synthetic_train_ds = load_synthetic_csv_manually(SYNTHETIC_CSV_PATH)
+SYNTHETIC_CSV_PATH = "synthetic_data/bios_balanced_jobs_10k.csv"
+manual = False # set to true if no quotations
+if manual:
+    print(f"Manually parsing synthetic dataset from '{SYNTHETIC_CSV_PATH}'...")
+    synthetic_train_ds = load_synthetic_csv_manually(SYNTHETIC_CSV_PATH)
+else:
+    print(f"Parsing synthetic dataset from '{SYNTHETIC_CSV_PATH}'...")
+    synthetic_train_ds = load_synthetic_csv(SYNTHETIC_CSV_PATH)
 
 # Combine original and synthetic training data
 #print("Combining original and synthetic training data...")
@@ -131,12 +190,12 @@ def compute_metrics(eval_pred):
 
 # Define training arguments
 training_args = TrainingArguments(
-    output_dir="test_trainer_very_synthetic", # Directory to save model checkpoints for synthetic run
+    output_dir="test_trainer_balanced_synthetic", # Directory to save model checkpoints for synthetic run
     do_eval=True, # Perform evaluation at the end of each epoch
-    num_train_epochs=5,  # For a quick baseline, 1 epoch is fine. Increase for better performance.
+    num_train_epochs=3,  # For a quick baseline, 1 epoch is fine. Increase for better performance.
     per_device_train_batch_size=16,
     per_device_eval_batch_size=16,
-    logging_dir='./logs_synthetic', # Separate logs for synthetic run
+    logging_dir='./logs_balanced', # Separate logs for synthetic run
     logging_steps=100,
     learning_rate=5e-5,
     weight_decay=0.01,
@@ -157,7 +216,7 @@ print("\nStarting model training with synthetic data...")
 trainer.train()
 
 # Save the final trained model and tokenizer to a specific directory
-final_model_dir = "./final_model_very_synthetic" # Separate directory for synthetic model
+final_model_dir = "./final_model_balanced_synthetic" # Separate directory for synthetic model
 print(f"\nSaving final model and tokenizer to {final_model_dir}...")
 trainer.save_model(final_model_dir)
 tokenizer.save_pretrained(final_model_dir)
