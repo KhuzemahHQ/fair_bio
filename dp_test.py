@@ -13,10 +13,16 @@ def test_demographic_parity():
     with respect to gender.
     """
 
-    # Select Model : pellement99/distilbert-occupation-classifier, pellement99/occupation-classification-synthetic, or pellement99/occupation-classification-very-synthetic
-    MODEL_ID = "pellement99/pellement99/occupation-classification-very-synthetic" 
+    # Select Model : 
+    # pellement99/distilbert-occupation-classifier, 
+    # pellement99/occupation-classification-synthetic
+    # pellement99/occupation-classification-very-synthetic
+    MODEL_ID = "pellement99/occupation-classification-very-synthetic" 
     DATA_DIR = "./data"
+    # PREDICTIONS_FILE = "predictions.csv"
+    # PREDICTIONS_FILE = "hybrid_predictions.csv"
     PREDICTIONS_FILE = "very_predictions.csv"
+
 
     # 1. Setup device
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -84,7 +90,7 @@ def test_demographic_parity():
     df['predicted_label'] = df['predicted_id'].map(id2label)
 
 
-    # Separate by gender ID. In this dataset: 0 = female, 1 = male.
+    # Separate by gender ID. In this dataset: 0 = male, 1 = female.
     males = df[df['gender_id'] == 0]
     females = df[df['gender_id'] == 1]
 
@@ -100,19 +106,26 @@ def test_demographic_parity():
     print("Top 10 professions with the largest demographic parity difference:")
     print(dist_df.head(10))
 
+    # Calculate and print the overall fairness score
+    mean_abs_diff = dist_df['Difference'].mean()
+    print("\n---")
+    print(f"Overall Fairness Score (Mean Absolute Difference): {mean_abs_diff:.6f}")
+    print("(A lower score indicates better fairness/less demographic parity disparity)")
+
     # 6. Visualize the distributions
     print("\nGenerating plot of prediction distributions by gender...")
     plot_df = dist_df.drop(columns=['Difference']).sort_index() # Sort alphabetically for the plot
     plot_df.plot(kind='bar', figsize=(18, 8), width=0.8)
 
     plt.title('Distribution of Predicted Professions by Gender')
+    plt.ylim(0,0.35)
     plt.ylabel('Proportion of Predictions')
     plt.xlabel('Profession ID')
     plt.xticks(rotation=90)
     plt.ylim(0, 0.35)
     plt.tight_layout()
     plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.savefig("results/very_synth_parity_440pm.png")
+    # plt.savefig("results/baseline_parity.png")
 
 if __name__ == "__main__":
     test_demographic_parity()
